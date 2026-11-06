@@ -1,0 +1,185 @@
+{
+  "info": {
+    "name": "Task API completed filter",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "All tasks (parameter omitted)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tasks"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const tasks = pm.response.json();",
+              "pm.test(\"Response is an array\", () => pm.expect(tasks).to.be.an(\"array\"));",
+              "pm.test(\"Fixtures include both completion states\", () => { pm.expect(tasks.some(t => t.completed === true)).to.be.true; pm.expect(tasks.some(t => t.completed === false)).to.be.true; });",
+              "pm.collectionVariables.set(\"allTasks\", JSON.stringify(tasks));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Only completed tasks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tasks?completed=true"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const tasks = pm.response.json();",
+              "const all = JSON.parse(pm.collectionVariables.get(\"allTasks\"));",
+              "const expected = all.filter(t => t.completed === true);",
+              "pm.test(\"Every task has completed=true\", () => pm.expect(tasks.every(t => t.completed === true)).to.be.true);",
+              "pm.test(\"Exactly the matching tasks are returned\", () => pm.expect(tasks.map(t => t.id).sort((a,b) => a-b)).to.deep.equal(expected.map(t => t.id).sort((a,b) => a-b)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Only incomplete tasks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tasks?completed=false"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const tasks = pm.response.json();",
+              "const all = JSON.parse(pm.collectionVariables.get(\"allTasks\"));",
+              "const expected = all.filter(t => t.completed === false);",
+              "pm.test(\"Every task has completed=false\", () => pm.expect(tasks.every(t => t.completed === false)).to.be.true);",
+              "pm.test(\"Exactly the matching tasks are returned\", () => pm.expect(tasks.map(t => t.id).sort((a,b) => a-b)).to.deep.equal(expected.map(t => t.id).sort((a,b) => a-b)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invalid value",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tasks?completed=invalid"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Validation error explains completed\", () => { const body = pm.response.json(); pm.expect(body.error).to.equal(\"Validation failed\"); pm.expect(body.details).to.include(\"completed must be true or false\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Empty value",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tasks?completed="
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Validation error explains completed\", () => { const body = pm.response.json(); pm.expect(body.error).to.equal(\"Validation failed\"); pm.expect(body.details).to.include(\"completed must be true or false\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Numeric value",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tasks?completed=1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Validation error explains completed\", () => { const body = pm.response.json(); pm.expect(body.error).to.equal(\"Validation failed\"); pm.expect(body.details).to.include(\"completed must be true or false\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uppercase value",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tasks?completed=TRUE"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Validation error explains completed\", () => { const body = pm.response.json(); pm.expect(body.error).to.equal(\"Validation failed\"); pm.expect(body.details).to.include(\"completed must be true or false\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Repeated parameter",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tasks?completed=true&completed=false"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Validation error explains completed\", () => { const body = pm.response.json(); pm.expect(body.error).to.equal(\"Validation failed\"); pm.expect(body.details).to.include(\"completed must be true or false\"); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
